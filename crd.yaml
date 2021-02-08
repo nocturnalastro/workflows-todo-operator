@@ -1,0 +1,41 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: todos.workflows.engine
+spec:
+  scope: Namespaced
+  group: workflows.engine
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                gitRepo:
+                  type: string
+                allowedCORS:
+                  type: array
+                  items:
+                    type: string
+  names:
+    kind: ToDo
+    plural: todos
+    singular: todo
+    shortNames:
+      - todo
+  additionalPrinterColumns:
+    - name: CORS
+      type: array
+      priority: 0
+      JSONPath: .spec.allowedCORS
+      description: A list of allowed CORS domains.
+    - name: Git Repo
+      type: string
+      priority: 0
+      JSONPath: .spec.gitRepo
+      description: The repo to build the Dockerfile of into an image stream
