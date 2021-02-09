@@ -1,0 +1,54 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  annotations:
+    app.openshift.io/vcs-ref: {GIT_BRANCH}
+    app.openshift.io/vcs-uri: '{GIT_REPO}'
+  name: {NAME}
+  namespace: {NAMESPACE}
+  labels:
+    app: {APP_NAME}
+    app.kubernetes.io/component: {APP_NAME}
+    app.kubernetes.io/instance: {APP_NAME}
+    app.kubernetes.io/part-of: {APP_NAME}-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {APP_NAME}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: {APP_NAME}
+        deploymentconfig: {APP_NAME}
+    spec:
+      containers:
+        - name: {APP_NAME}
+          image: >-
+            {IMAGE}
+          resources: {empty}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+          resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "286Mi"
+            cpu: "500m"
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      serviceAccountName: {SERVICE_ACCOUNT_NAME}
+      serviceAccount: {SERVICE_ACCOUNT}
+      securityContext: {empty}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
