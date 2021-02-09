@@ -18,7 +18,7 @@ def create_image_stream(spec, name, namespace, logger):
 
     logger.info("fetching image stream template")
 
-    with open("templates/image_strea.yaml") as template_file:
+    with open("templates/image_stream.yaml") as template_file:
         stream_template = template_file.read()
         stream = stream_template.format(
             GIT_BRANCH="master",
@@ -46,5 +46,5 @@ def create_image_stream(spec, name, namespace, logger):
 
 @kopf.on.create("workflows.engine", "v1", "todos")
 def create_fn(spec, name, namespace, logger, **kwargs):
-    logger.info("Todo created")
+    logger.info("Todo CRD created")
     create_image_stream(spec, name, namespace, logger)
