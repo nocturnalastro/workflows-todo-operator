@@ -1,4 +1,4 @@
-from logging import Logger
+from logging import Logger, log
 from os import set_inheritable
 import kopf
 import kubernetes
@@ -17,38 +17,79 @@ def load_str(content):
         return yaml.load(f, Loader=yaml.FullLoader)
 
 
-def create_image_stream(spec, name, namespace, logger):
+def _create_CRD_from_template(object_name, template_path, template_values, crd_create_values, logger):
     api = kubernetes.client.CustomObjectsApi()
 
-    logger.info("fetching image stream template")
+    logger.info("fetching {obj_name} template".format(object_name=object_name))
 
-    with (ROOT / "templates/image_stream.yaml").open() as template_file:
+    with (ROOT / template_path).open() as template_file:
         stream_template = template_file.read()
-        stream = stream_template.format(
-            GIT_BRANCH="master",
-            GIT_REPO="https://github.com/unipartdigital/workflows_engine",
-            NAME="workflows-engine-3",
-            NAMESPACE="todo",
-            APP_NAME="workflows-engine",
-            STREAM_NAME="workflows-engine-3:latest",
-            empty="{}",
-        )
+        stream = stream_template.format(**template_values)
         body = load_str(stream)
 
     logger.info(f"creating object: {json.dumps(stream)}")
 
-    res = api.create_namespaced_custom_object(
+    res = api.create_namespaced_custom_object(body=body, **crd_create_values)
+
+    logger.info(f"result: {res}")
+
+
+def create_build_congfig(sepc, name, namespace, logger):
+    template_values = dict(
+        GIT_BRANCH="master",
+        GIT_REPO="https://github.com/unipartdigital/workflows_engine",
+        NAME="workflows-engine",
+        NAMESPACE="todo",
+        APP_NAME="workflows-engine",
+        STREAM_NAME="workflows-engine",
+        empty="{}",
+    )
+
+    crd_create_values = dict(
+        group="build.openshift.io",
+        version="v1",
+        namespace=namespace,
+        plural="buildconfigs",
+    )
+
+    _create_CRD_from_template(
+        object_name="build config",
+        template_path="templates/build_config.yaml",
+        template_values=template_values,
+        crd_create_values=crd_create_values,
+        logger=logger,
+    )
+
+
+def create_image_stream(spec, name, namespace, logger):
+    template_values = dict(
+        GIT_BRANCH="master",
+        GIT_REPO="https://github.com/unipartdigital/workflows_engine",
+        NAME="workflows-engine",
+        NAMESPACE="todo",
+        APP_NAME="workflows-engine",
+        STREAM_NAME="workflows-engine:latest",
+        empty="{}",
+    )
+
+    crd_create_values = dict(
         group="image.openshift.io",
         version="v1",
         namespace=namespace,
         plural="imagestreams",
-        body=body,
     )
 
-    logger.info(f"result: {res}")
+    _create_CRD_from_template(
+        object_name="image steam",
+        template_path="templates/image_stream.yaml",
+        template_values=template_values,
+        crd_create_values=crd_create_values,
+        logger=logger,
+    )
 
 
 @kopf.on.create("workflows.engine", "v1", "todos")
 def create_fn(spec, name, namespace, logger, **kwargs):
     logger.info("Todo CRD created")
+    create_build_congfig(spec, name, namespace, logger)
     create_image_stream(spec, name, namespace, logger)
