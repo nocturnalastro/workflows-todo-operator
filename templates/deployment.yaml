@@ -41,8 +41,6 @@ spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
-      serviceAccountName: {SERVICE_ACCOUNT_NAME}
-      serviceAccount: {SERVICE_ACCOUNT}
       securityContext: {empty}
       schedulerName: default-scheduler
   strategy:

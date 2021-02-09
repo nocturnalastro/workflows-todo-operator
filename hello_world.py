@@ -142,8 +142,6 @@ def create_deployment(spec, name, namespace, image_stream, logger):
         NAMESPACE="todo",
         APP_NAME="workflows-engine",
         IMAGE=_get_image_ref(image_stream, "latest"),
-        SERVICE_ACCOUNT_NAME="kopfexample-account",
-        SERVICE_ACCOUNT="kopfexample-account",
         empty="{}",
     )
 
