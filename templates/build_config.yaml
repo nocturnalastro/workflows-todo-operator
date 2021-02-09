@@ -1,0 +1,37 @@
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  annotations:
+    app.openshift.io/vcs-ref: {GIT_BRANCH}
+    app.openshift.io/vcs-uri: '{GIT_REPO}'
+  name: {NAME}
+  namespace: {NAMESPACE}
+  labels:
+    app: {APP_NAME}
+    app.kubernetes.io/component: {APP_NAME}
+    app.kubernetes.io/instance: {APP_NAME}
+    app.kubernetes.io/part-of: {APP_NAME}-app
+spec:
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: '{STREAM_NAME}'
+  resources: {empty}
+  successfulBuildsHistoryLimit: 5
+  failedBuildsHistoryLimit: 5
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+  postCommit: {empty}
+  source:
+    type: Git
+    git:
+      uri: '{GIT_REPO}'
+    contextDir: /
+  triggers:
+    - type: ConfigChange
+  runPolicy: Serial
+status:
+  lastVersion: 1
