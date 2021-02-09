@@ -41,7 +41,7 @@ def create_build_congfig(sepc, name, namespace, logger):
         NAME="workflows-engine",
         NAMESPACE="todo",
         APP_NAME="workflows-engine",
-        STREAM_NAME="workflows-engine",
+        STREAM_NAME="workflows-engine:latest",
         empty="{}",
     )
 
