@@ -2,6 +2,7 @@ from logging import Logger, log
 from os import set_inheritable
 import kopf
 import kubernetes
+from kubernetes.client.rest import ApiException
 from io import StringIO
 import yaml
 import json
@@ -17,7 +18,7 @@ def load_str(content):
         return yaml.load(f, Loader=yaml.FullLoader)
 
 
-def _create_CRD_from_template(object_name, template_path, template_values, crd_create_values, logger):
+def _create_CRD_from_template(object_name, template_path, template_values, crd_values, logger):
     api = kubernetes.client.CustomObjectsApi()
 
     logger.info("fetching {object_name} template".format(object_name=object_name))
@@ -29,9 +30,19 @@ def _create_CRD_from_template(object_name, template_path, template_values, crd_c
 
     logger.info(f"creating object: {json.dumps(stream)}")
 
-    res = api.create_namespaced_custom_object(body=body, **crd_create_values)
+    res = api.create_namespaced_custom_object(body=body, **crd_values)
 
     logger.info(f"result: {res}")
+
+
+def _check_for_CRD(object_name, name, crd_values, logger):
+    api = kubernetes.client.CustomObjectsApi()
+    logger.info("looking to see if {object_name} aready exists".format(object_name=object_name))
+    try:
+        res = api.get_namespaced_custom_object(name=name, **crd_values)
+        return True
+    except ApiException:
+        return False
 
 
 def create_build_congfig(sepc, name, namespace, logger):
@@ -45,20 +56,27 @@ def create_build_congfig(sepc, name, namespace, logger):
         empty="{}",
     )
 
-    crd_create_values = dict(
+    crd_values = dict(
         group="build.openshift.io",
         version="v1",
         namespace=namespace,
         plural="buildconfigs",
     )
 
-    _create_CRD_from_template(
+    if not _check_for_CRD(
         object_name="build config",
-        template_path="templates/build_config.yaml",
-        template_values=template_values,
-        crd_create_values=crd_create_values,
+        name=template_values["NAME"],
+        crd_values=crd_values,
         logger=logger,
-    )
+    ):
+
+        _create_CRD_from_template(
+            object_name="build config",
+            template_path="templates/build_config.yaml",
+            template_values=template_values,
+            crd_values=crd_values,
+            logger=logger,
+        )
 
 
 def create_image_stream(spec, name, namespace, logger):
@@ -72,20 +90,26 @@ def create_image_stream(spec, name, namespace, logger):
         empty="{}",
     )
 
-    crd_create_values = dict(
+    crd_values = dict(
         group="image.openshift.io",
         version="v1",
         namespace=namespace,
         plural="imagestreams",
     )
 
-    _create_CRD_from_template(
+    if not _check_for_CRD(
         object_name="image steam",
-        template_path="templates/image_stream.yaml",
-        template_values=template_values,
-        crd_create_values=crd_create_values,
+        name=template_values["NAME"],
+        crd_values=crd_values,
         logger=logger,
-    )
+    ):
+        _create_CRD_from_template(
+            object_name="image steam",
+            template_path="templates/image_stream.yaml",
+            template_values=template_values,
+            crd_values=crd_values,
+            logger=logger,
+        )
 
 
 @kopf.on.create("workflows.engine", "v1", "todos")
