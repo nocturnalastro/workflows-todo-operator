@@ -7,6 +7,7 @@ from io import StringIO
 import yaml
 from dateutil.parser import parse as dtparse
 from pathlib import Path
+import json
 
 ROOT = Path(__file__).parent
 
@@ -157,6 +158,10 @@ def create_deployment(spec, name, namespace, image_stream, logger):
 
 @kopf.on.create("workflows.engine", "v1", "todos")
 def create_fn(spec, name, namespace, logger, **kwargs):
+    logger.info(f"Spec: {json.dumps(spec)}")
+    logger.info(f"name: {name}")
+    logger.info(f"namespace: {namespace}")
+
     logger.info("Todo CRD created")
     create_build_congfig(spec, name, namespace, logger)
     image_stream = create_image_stream(spec, name, namespace, logger)
