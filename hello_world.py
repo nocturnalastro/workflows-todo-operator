@@ -35,11 +35,15 @@ def _create_CRD_from_template(object_name, template_path, template_values, crd_v
     logger.info(f"result: {res}")
 
 
-def _check_for_CRD(object_name, name, crd_values, logger):
+def _get_CRD(name, crd_values):
     api = kubernetes.client.CustomObjectsApi()
+    return api.get_namespaced_custom_object(name=name, **crd_values)
+
+
+def _check_for_CRD(object_name, name, crd_values, logger):
     logger.info("looking to see if {object_name} aready exists".format(object_name=object_name))
     try:
-        res = api.get_namespaced_custom_object(name=name, **crd_values)
+        _get_CRD(name, crd_values)
         return True
     except ApiException:
         return False
@@ -110,6 +114,13 @@ def create_image_stream(spec, name, namespace, logger):
             crd_values=crd_values,
             logger=logger,
         )
+
+    logger.info(
+        _get_CRD(
+            name=template_values["NAME"],
+            crd_values=crd_values,
+        )
+    )
 
 
 @kopf.on.create("workflows.engine", "v1", "todos")
