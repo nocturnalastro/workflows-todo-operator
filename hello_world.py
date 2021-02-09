@@ -4,6 +4,9 @@ import kubernetes
 from io import StringIO
 import yaml
 import json
+from pathlib import Path
+
+ROOT = Path(__file__).parent
 
 
 def load_str(content):
@@ -18,7 +21,7 @@ def create_image_stream(spec, name, namespace, logger):
 
     logger.info("fetching image stream template")
 
-    with open("templates/image_stream.yaml") as template_file:
+    with (ROOT / "templates/image_stream.yaml").open() as template_file:
         stream_template = template_file.read()
         stream = stream_template.format(
             GIT_BRANCH="master",
