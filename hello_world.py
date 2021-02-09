@@ -158,7 +158,7 @@ def create_deployment(spec, name, namespace, image_stream, logger):
 
 @kopf.on.create("workflows.engine", "v1", "todos")
 def create_fn(spec, name, namespace, logger, **kwargs):
-    logger.info(f"Spec: {json.dumps(spec)}")
+    logger.info(f"Spec: {spec.get('gitRepo')}")
     logger.info(f"name: {name}")
     logger.info(f"namespace: {namespace}")
 
