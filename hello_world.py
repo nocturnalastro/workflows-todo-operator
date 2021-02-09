@@ -14,7 +14,7 @@ def load_str(content):
     with StringIO() as f:
         f.write(content)
         f.seek(0)  # Reset position
-        return yaml.load(f)
+        return yaml.load(f, Loader=yaml.FullLoader)
 
 
 def create_image_stream(spec, name, namespace, logger):
