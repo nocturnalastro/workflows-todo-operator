@@ -1,3 +1,4 @@
+from logging import Logger
 from os import set_inheritable
 import kopf
 import kubernetes
@@ -11,7 +12,7 @@ ROOT = Path(__file__).parent
 
 def load_str(content):
     with StringIO() as f:
-        f.write(f)
+        f.write(content)
         f.seek(0)  # Reset position
         return yaml.load(f)
 
