@@ -146,7 +146,10 @@ def create_deployment(spec, name, namespace, image_stream, logger):
     )
 
     body = _process_template(
-        object_name="deployment", template_path="templates/deployment.yaml", template_values=template_values
+        object_name="deployment",
+        template_path="templates/deployment.yaml",
+        template_values=template_values,
+        logger=logger,
     )
     api = kubernetes.client.AppsV1Api()
     return api.create_namespaced_deployment(body=body, namespace=template_values["NAMESPACE"])
