@@ -20,7 +20,7 @@ def load_str(content):
 def _create_CRD_from_template(object_name, template_path, template_values, crd_create_values, logger):
     api = kubernetes.client.CustomObjectsApi()
 
-    logger.info("fetching {obj_name} template".format(object_name=object_name))
+    logger.info("fetching {object_name} template".format(object_name=object_name))
 
     with (ROOT / template_path).open() as template_file:
         stream_template = template_file.read()
