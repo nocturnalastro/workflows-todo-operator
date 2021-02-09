@@ -86,7 +86,7 @@ def create_image_stream(spec, name, namespace, logger):
         NAME="workflows-engine",
         NAMESPACE="todo",
         APP_NAME="workflows-engine",
-        STREAM_NAME="workflows-engine:latest",
+        STREAM_NAME="workflows-engine",
         empty="{}",
     )
 
