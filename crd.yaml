@@ -18,6 +18,13 @@ spec:
               properties:
                 gitRepo:
                   type: string
+                  required: true
+                gitBranch:
+                  type: string
+                appName:
+                  type: string
+                tagName:
+                  type: string
                 allowedCORS:
                   type: array
                   items:
@@ -29,13 +36,28 @@ spec:
     shortNames:
       - todo
   additionalPrinterColumns:
-    - name: CORS
-      type: array
-      priority: 0
-      JSONPath: .spec.allowedCORS
-      description: A list of allowed CORS domains.
     - name: Git Repo
       type: string
       priority: 0
       JSONPath: .spec.gitRepo
       description: The repo to build the Dockerfile of into an image stream
+    - name: Git Branch
+      type: string
+      priority: 0
+      JSONPath: .spec.gitBranch
+      description: The git branch to pull (defualt is master)
+    - name: appName
+      type: string
+      priority: 0
+      JSONPath: .spec.appName
+      description: Name of the resultant app (default is name of ToDO CRD)
+    - name: tagName
+      type: string
+      priority: 0
+      JSONPath: .spec.tagName
+      description: tag for the image stream  and deploment (default is master)
+    - name: CORS
+      type: array
+      priority: 0
+      JSONPath: .spec.allowedCORS
+      description: A list of allowed CORS domains (default is "*")
