@@ -1,0 +1,69 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kopf-todo-role-namespaced
+  namespace: todo
+rules:
+  - verbs:
+      - list
+      - watch
+      - patch
+      - get
+    apiGroups:
+      - kopf.dev
+    resources:
+      - kopfpeerings
+  - verbs:
+      - create
+    apiGroups:
+      - ""
+    resources:
+      - events
+  - verbs:
+      - create
+    apiGroups:
+      - batch
+      - extensions
+    resources:
+      - jobs
+  - verbs:
+      - create
+    apiGroups:
+      - ""
+    resources:
+      - pods
+  - verbs:
+      - list
+      - watch
+      - patch
+    apiGroups:
+      - workflows.engine
+    resources:
+      - todos
+  - verbs:
+      - get
+      - create
+      - watch
+      - patch
+    apiGroups:
+      - image.openshift.io
+    resources:
+      - imagestreams
+  - verbs:
+      - get
+      - create
+      - watch
+      - patch
+    apiGroups:
+      - build.openshift.io
+    resources:
+      - buildconfigs
+  - verbs:
+      - get
+      - create
+      - watch
+      - patch
+    apiGroups:
+      - apps
+    resources:
+      - deployments

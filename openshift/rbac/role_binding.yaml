@@ -1,0 +1,12 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kopf-todo-rolebinding-namespaced
+  namespace: todo
+subjects:
+  - kind: ServiceAccount
+    name: kopf-todo-account
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kopf-todo-role-namespaced
