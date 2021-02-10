@@ -84,12 +84,12 @@ def create_build_congfig(sepc, name, namespace, logger):
 
 def create_image_stream(spec, name, namespace, logger):
     template_values = dict(
-        GIT_BRANCH="master",
-        GIT_REPO="https://github.com/unipartdigital/workflows_engine",
-        NAME="workflows-engine",
-        NAMESPACE="todo",
-        APP_NAME="workflows-engine",
-        STREAM_NAME="workflows-engine",
+        GIT_BRANCH=spec.get("gitBranch", "master"),
+        GIT_REPO=spec.get("gitRepo"),
+        NAME=spec.get("appName", name),
+        NAMESPACE=namespace,
+        APP_NAME=spec.get("appName", name),
+        STREAM_NAME=spec.get("appName", name),
         empty="{}",
     )
 
@@ -137,12 +137,12 @@ def _get_image_ref(image_stream, tag_name):
 
 def create_deployment(spec, name, namespace, image_stream, logger):
     template_values = dict(
-        GIT_BRANCH="master",
-        GIT_REPO="https://github.com/unipartdigital/workflows_engine",
-        NAME="workflows-engine",
-        NAMESPACE="todo",
-        APP_NAME="workflows-engine",
-        IMAGE=_get_image_ref(image_stream, "latest"),
+        GIT_BRANCH=spec.get("gitBranch", "master"),
+        GIT_REPO=spec.get("gitRepo"),
+        NAME=spec.get("appName", name),
+        NAMESPACE=namespace,
+        APP_NAME=spec.get("appName", name),
+        IMAGE=_get_image_ref(image_stream, spec.get("tagName", "latest")),
         empty="{}",
     )
 
@@ -158,10 +158,6 @@ def create_deployment(spec, name, namespace, image_stream, logger):
 
 @kopf.on.create("workflows.engine", "v1", "todos")
 def create_fn(spec, name, namespace, logger, **kwargs):
-    logger.info(f"Spec: {spec.get('gitRepo')}")
-    logger.info(f"name: {name}")
-    logger.info(f"namespace: {namespace}")
-
     logger.info("Todo CRD created")
     create_build_congfig(spec, name, namespace, logger)
     image_stream = create_image_stream(spec, name, namespace, logger)
