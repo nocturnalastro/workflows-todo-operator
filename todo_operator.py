@@ -129,14 +129,14 @@ def _get_image_ref(image_stream, tag_name):
 
     tag = matching_tags[0]
 
-    if not tag["items"]:
+    if "items" not in tag or not tag["items"]:
         raise ValueError("No items in tag dicription perhaps no buids")
 
     latest_build = sorted(tag["items"], key=lambda i: dtparse(i["created"]))[0]
     return latest_build["dockerImageReference"]
 
 
-def _wait_for_tag(get_image_stream, spec, retrys=5):
+def _wait_for_build(get_image_stream, spec, retrys=5):
     atempts = 0
     while atempts < retrys:
         try:
@@ -147,32 +147,48 @@ def _wait_for_tag(get_image_stream, spec, retrys=5):
             time.sleep(1)
         atempts += 1
 
-    raise TimeoutError("No tag found")
+    raise TimeoutError("No build found")
+
+
+def _get_deployment(name, namespace):
+    api = kubernetes.client.CustomObjectsApi()
+    return api.read_namespaced_deployment(name=name, namespace=namespace)
+
+
+def _check_for_deployment(name, namespace, logger):
+    logger.info("looking to see if deployment aready exists")
+    try:
+        _get_deployment(name, namespace)
+        return True
+    except ApiException:
+        return False
 
 
 def create_deployment(spec, name, namespace, get_image_stream, logger):
 
-    _wait_for_tag(get_image_stream, spec)
-    image_stream = get_image_stream()
+    if not _check_for_deployment(name, namespace):
 
-    template_values = dict(
-        GIT_BRANCH=spec.get("gitBranch", "master"),
-        GIT_REPO=spec.get("gitRepo"),
-        NAME=spec.get("appName", name),
-        NAMESPACE=namespace,
-        APP_NAME=spec.get("appName", name),
-        IMAGE=_get_image_ref(image_stream, spec.get("tagName", "latest")),
-        empty="{}",
-    )
+        _wait_for_build(get_image_stream, spec, logger)
+        image_stream = get_image_stream()
 
-    body = _process_template(
-        object_name="deployment",
-        template_path="templates/deployment.yaml",
-        template_values=template_values,
-        logger=logger,
-    )
-    api = kubernetes.client.AppsV1Api()
-    return api.create_namespaced_deployment(body=body, namespace=template_values["NAMESPACE"])
+        template_values = dict(
+            GIT_BRANCH=spec.get("gitBranch", "master"),
+            GIT_REPO=spec.get("gitRepo"),
+            NAME=spec.get("appName", name),
+            NAMESPACE=namespace,
+            APP_NAME=spec.get("appName", name),
+            IMAGE=_get_image_ref(image_stream, spec.get("tagName", "latest")),
+            empty="{}",
+        )
+
+        body = _process_template(
+            object_name="deployment",
+            template_path="templates/deployment.yaml",
+            template_values=template_values,
+            logger=logger,
+        )
+        api = kubernetes.client.AppsV1Api()
+        api.create_namespaced_deployment(body=body, namespace=template_values["NAMESPACE"])
 
 
 @kopf.on.create("workflows.engine", "v1", "todos")
