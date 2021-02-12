@@ -18,7 +18,6 @@ spec:
               properties:
                 gitRepo:
                   type: string
-                  required: true
                 gitBranch:
                   type: string
                 appName:
@@ -29,6 +28,7 @@ spec:
                   type: array
                   items:
                     type: string
+              required: ["gitRepo"]
   names:
     kind: ToDo
     plural: todos
