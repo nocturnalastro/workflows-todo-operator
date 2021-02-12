@@ -12,7 +12,7 @@ import json
 ROOT = Path(__file__).parent
 
 
-def load_str(content):
+def _load_str(content):
     with StringIO() as f:
         f.write(content)
         f.seek(0)  # Reset position
@@ -25,24 +25,24 @@ def _process_template(object_name, template_path, template_values, logger):
     with (ROOT / template_path).open() as template_file:
         stream_template = template_file.read()
         stream = stream_template.format(**template_values)
-        return load_str(stream)
+        return _load_str(stream)
 
 
-def _create_CRD_from_template(object_name, template_path, template_values, crd_values, logger):
+def _create_custom_resource_from_template(object_name, template_path, template_values, crd_values, logger):
     api = kubernetes.client.CustomObjectsApi()
     body = _process_template(object_name, template_path, template_values, logger)
     return api.create_namespaced_custom_object(body=body, **crd_values)
 
 
-def _get_CRD(name, crd_values):
+def _get_custom_resource(name, crd_values):
     api = kubernetes.client.CustomObjectsApi()
     return api.get_namespaced_custom_object(name=name, **crd_values)
 
 
-def _check_for_CRD(object_name, name, crd_values, logger):
+def _check_for_custom_resource(object_name, name, crd_values, logger):
     logger.info("looking to see if {object_name} aready exists".format(object_name=object_name))
     try:
-        _get_CRD(name, crd_values)
+        _get_custom_resource(name, crd_values)
         return True
     except ApiException:
         return False
@@ -66,14 +66,14 @@ def create_build_congfig(sepc, name, namespace, logger):
         plural="buildconfigs",
     )
 
-    if not _check_for_CRD(
+    if not _check_for_custom_resource(
         object_name="build config",
         name=template_values["NAME"],
         crd_values=crd_values,
         logger=logger,
     ):
 
-        _create_CRD_from_template(
+        _create_custom_resource_from_template(
             object_name="build config",
             template_path="templates/build_config.yaml",
             template_values=template_values,
@@ -100,13 +100,13 @@ def create_image_stream(spec, name, namespace, logger):
         plural="imagestreams",
     )
 
-    if not _check_for_CRD(
+    if not _check_for_custom_resource(
         object_name="image steam",
         name=template_values["NAME"],
         crd_values=crd_values,
         logger=logger,
     ):
-        _create_CRD_from_template(
+        _create_custom_resource_from_template(
             object_name="image steam",
             template_path="templates/image_stream.yaml",
             template_values=template_values,
@@ -114,7 +114,7 @@ def create_image_stream(spec, name, namespace, logger):
             logger=logger,
         )
 
-    return _get_CRD(
+    return _get_custom_resource(
         name=template_values["NAME"],
         crd_values=crd_values,
     )
