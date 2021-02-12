@@ -166,7 +166,7 @@ def _check_for_deployment(name, namespace, logger):
 
 def create_deployment(spec, name, namespace, get_image_stream, logger):
 
-    if not _check_for_deployment(name, namespace):
+    if not _check_for_deployment(name, namespace, logger):
 
         _wait_for_build(get_image_stream, spec, logger)
         image_stream = get_image_stream()
