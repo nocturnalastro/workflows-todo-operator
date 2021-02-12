@@ -8,6 +8,7 @@ import yaml
 from dateutil.parser import parse as dtparse
 from pathlib import Path
 import json
+import time
 
 ROOT = Path(__file__).parent
 
@@ -48,14 +49,14 @@ def _check_for_custom_resource(object_name, name, crd_values, logger):
         return False
 
 
-def create_build_congfig(sepc, name, namespace, logger):
+def create_build_congfig(spec, name, namespace, logger):
     template_values = dict(
-        GIT_BRANCH="master",
-        GIT_REPO="https://github.com/unipartdigital/workflows_engine",
-        NAME="workflows-engine",
-        NAMESPACE="todo",
-        APP_NAME="workflows-engine",
-        STREAM_NAME="workflows-engine:latest",
+        GIT_BRANCH=spec.get("gitBranch", "master"),
+        GIT_REPO=spec.get("gitRepo"),
+        NAME=spec.get("appName", name),
+        NAMESPACE=namespace,
+        APP_NAME=spec.get("appName", name),
+        STREAM_NAME="{name}:{tag}".format(name=spec.get("appName", name), tag=spec.get("tag", "latest")),
         empty="{}",
     )
 
@@ -114,7 +115,7 @@ def create_image_stream(spec, name, namespace, logger):
             logger=logger,
         )
 
-    return _get_custom_resource(
+    return lambda: _get_custom_resource(
         name=template_values["NAME"],
         crd_values=crd_values,
     )
@@ -135,7 +136,25 @@ def _get_image_ref(image_stream, tag_name):
     return latest_build["dockerImageReference"]
 
 
-def create_deployment(spec, name, namespace, image_stream, logger):
+def _wait_for_tag(get_image_stream, spec, retrys=5):
+    atempts = 0
+    while atempts < retrys:
+        try:
+            image_stream = get_image_stream()
+            _get_image_ref(image_stream, spec.get("tagName", "latest"))
+            return image_stream
+        except KeyError:
+            time.sleep(1)
+        atempts += 1
+
+    raise TimeoutError("No tag found")
+
+
+def create_deployment(spec, name, namespace, get_image_stream, logger):
+
+    _wait_for_tag(get_image_stream, spec)
+    image_stream = get_image_stream()
+
     template_values = dict(
         GIT_BRANCH=spec.get("gitBranch", "master"),
         GIT_REPO=spec.get("gitRepo"),
@@ -160,5 +179,5 @@ def create_deployment(spec, name, namespace, image_stream, logger):
 def create_fn(spec, name, namespace, logger, **kwargs):
     logger.info("Todo CRD created")
     create_build_congfig(spec, name, namespace, logger)
-    image_stream = create_image_stream(spec, name, namespace, logger)
-    create_deployment(spec, name, namespace, image_stream, logger)
+    get_image_stream = create_image_stream(spec, name, namespace, logger)
+    create_deployment(spec, name, namespace, get_image_stream, logger)
